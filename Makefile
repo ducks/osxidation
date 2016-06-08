@@ -33,6 +33,7 @@ $(iso): $(kernel) $(grub_cfg)
 	cp $(grub_cfg) build/isofiles/boot/grub
 	cp $(kernel) build/isofiles/boot/kernel.bin
 	grub-mkrescue -o $(iso) build/isofiles
+	rm -r build/isofiles
 
 $(kernel): cargo $(rust_os) $(asm_obj_files) $(linker) 
 	ld -n -T $(linker) -o $(kernel) $(asm_obj_files) $(rust_os) 
