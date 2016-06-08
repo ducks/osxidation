@@ -1,0 +1,11 @@
+# compiled files
+*.o
+*.so
+*.rlib
+*.dll
+
+# generated dirs
+/target/
+
+# build dir
+/build/
