@@ -1,10 +1,18 @@
 [package]
 name = "osxidation"
 version = "0.0.0"
-author = ["Jake Goldsborough <rjgoldsborough@gmail.com>"]
+authors = ["Jake Goldsborough <rjgoldsborough@gmail.com>"]
 
 [lib]
 crate-type = ["staticlib"]
 
 [dependencies]
 rlibc = "0.1.4"
+
+# the dev profile - `cargo build`
+[profile.dev]
+panic = "abort"
+
+# the release profile - `cargo build --release`
+[profile.release]
+panic = "abort"

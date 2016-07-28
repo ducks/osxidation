@@ -13,11 +13,13 @@ start:
   call set_up_page_tables
   call enable_paging
 
+  call set_up_SSE
+
   ; load the 64-bit GDT
   lgdt [gdt64.pointer]
 
   ; update selectors
-  mov ax, gdt64.data 
+  mov ax, gdt64.data
   mov ss, ax ; stack selector
   mov ds, ax ; data selctor
   mov es, ax ; extra selector
@@ -49,7 +51,7 @@ set_up_page_tables:
   cmp ecx, 512 ; if counter == 512, the whole p2 table is mapped
   jne .map_p2_table
 
-  ret 
+  ret
 
 enable_paging:
   ; load p4 to cr3 register (cpu uses this to access the p4 table)
@@ -142,16 +144,38 @@ check_long_mode:
   mov al, "2"
   jmp error
 
+; Check for SSE and enable it. If it's not supported throw error "a".
+set_up_SSE:
+  ; check for SSE
+  mov eax, 0x1
+  cpuid
+  test edx, 1<<25
+  jz .no_SSE
+
+  ; enable SSE
+  mov eax, cr0
+  and ax, 0xFFFB ; clear coprocessor emulation CR0.EM
+  or ax, 0x2 ; set coprocessor monitoring  CR0.MP
+  mov cr0, eax
+  mov eax, cr4
+  or ax, 3 << 9 ; set CR4.OSFXSR and CR4.OSXMMEXCPT at the same time
+  mov cr4, eax
+
+  ret
+.no_SSE:
+  mov al, "a"
+  jmp error
+
 section .bss
 align 4096
-p4_table: 
+p4_table:
     resb 4096
 p3_table:
     resb 4096
 p2_table:
     resb 4096
 stack_bottom:
-  resb 64
+    resb 64
 stack_top:
 
 section .rodata

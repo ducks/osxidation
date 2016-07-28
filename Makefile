@@ -1,5 +1,3 @@
-default: build
-
 arch ?= x86_64
 kernel := build/kernel-$(arch).bin
 iso := build/os-$(arch).iso
@@ -13,7 +11,7 @@ asm_src_files := $(wildcard src/arch/$(arch)/*.asm)
 asm_obj_files := $(patsubst src/arch/$(arch)/%.asm, \
 	build/arch/$(arch)/%.o, $(asm_src_files))
 
-.PHONY: clean
+.PHONY: all clean run iso cargo
 
 all: $(kernel)
 
@@ -30,17 +28,17 @@ iso: $(iso)
 
 $(iso): $(kernel) $(grub_cfg) 
 	mkdir -p build/isofiles/boot/grub
-	cp $(grub_cfg) build/isofiles/boot/grub
 	cp $(kernel) build/isofiles/boot/kernel.bin
-	grub-mkrescue -o $(iso) build/isofiles
+	cp $(grub_cfg) build/isofiles/boot/grub
+	grub-mkrescue -o $(iso) build/isofiles 2> /dev/null
 	rm -r build/isofiles
 
 $(kernel): cargo $(rust_os) $(asm_obj_files) $(linker) 
-	ld -n -T $(linker) -o $(kernel) $(asm_obj_files) $(rust_os) 
+	ld -n --gc-sections -T $(linker) -o $(kernel) $(asm_obj_files) $(rust_os)
 
 cargo:
-	cargo rustc --target $(target)
+	cargo build --target $(target)
 
 build/arch/$(arch)/%.o: src/arch/$(arch)/%.asm
 	mkdir -p $(shell dirname $@)
-	nasm -f elf64 $< -o $@
+	nasm -felf64 $< -o $@
